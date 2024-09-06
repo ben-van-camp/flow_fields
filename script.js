@@ -7,30 +7,40 @@ canvas.height = window.innerHeight;
 ctx.fillStyle = 'white';
 ctx.strokeStyle = 'white';
 ctx.lineWidth = 1;
+ctx.lineCap = 'round';
 
 class Particle {
     constructor(effect){
         this.effect = effect;
-        this.x = Math.floor(Math.random() * this.effect.width);
+        this.x = Math.floor(Math.random() * this.effect.width/2 + this.effect.width/4);
         this.y = Math.floor(Math.random() * this.effect.height);
         this.speedX;
         this.speedY;
-        this.speedModifier = Math.floor(Math.random() * 5 + 1);
+        this.speedModifier = Math.floor(Math.random() * 33 + 1);
+        this.deviation = Math.random() * this.speedModifier;
         this.history = [{x: this.x, y: this.y}];
-        this.maxLength = Math.floor(Math.random() * 200 + 10);
+        this.maxLength = Math.floor(Math.random() * 100 + (150 - this.speedModifier*5));
         this.angle = 0;
         this.timer = this.maxLength * 2;
-        this.colors = ['#73e3ff', '#92e7fc', '#b3eefc', '#cafcfa', '#e6f5ee'];
-        this.color = this.colors[Math.floor(Math.random() * this.colors.length)];
+        this.lineWidth = Math.random() * 33 + 1;
+        this.hueValue = Math.floor(Math.random() * 10);
+        this.lightValue = Math.floor(Math.random() * 17 + 33);
     }
     draw(context){
-        context.beginPath( );
+        context.lineWidth = this.lineWidth;
+        context.beginPath();
         context.moveTo(this.history[0].x, this.history[0].y);
         for (let i = 0; i < this.history.length; i++){
             context.lineTo(this.history[i].x, this.history[i].y);
+            context.strokeStyle = 'hsla(' + this.hueValue + ', ' + (100 - (100 - i)) + '%, ' + 50*(i/this.history.length) +  '%, 1)';
+            context.stroke();
+            context.beginPath();
+            context.moveTo(this.history[i].x, this.history[i].y);
         }
-        context.strokeStyle = this.color;
-        context.stroke();
+        context.save();
+        this.lineWidth += Math.random() / 100;
+        context.lineWidth = this.lineWidth;
+        context.restore();
     }
     update(){
         this.timer--;
@@ -38,10 +48,10 @@ class Particle {
             let x = Math.floor(this.x / this.effect.cellSize);
             let y = Math.floor(this.y / this.effect.cellSize);
             let index = y * this.effect.cols + x;
-            this.angle = this.effect.flowField[index];
-    
-            this.speedX = Math.cos(this.angle);
-            this.speedY = Math.sin(this.angle);
+            this.angle = this.effect.flowField[index] + this.deviation;
+            
+            this.speedX = Math.sin(this.angle);
+            this.speedY = Math.cos(this.angle);
             this.x += this.speedX * this.speedModifier;
             this.y += this.speedY * this.speedModifier;
     
@@ -58,8 +68,17 @@ class Particle {
     reset(){
         this.x = Math.floor(Math.random() * this.effect.width);
         this.y = Math.floor(Math.random() * this.effect.height);
+        this.speedX;
+        this.speedY;
+        this.speedModifier = Math.floor(Math.random() * 33 + 1);
+        this.deviation = Math.random() * this.speedModifier/2 + this.speedModifier/3;
         this.history = [{x: this.x, y: this.y}];
+        this.maxLength = Math.floor(Math.random() * 100 + (150 - this.speedModifier*5));
+        this.angle = 0;
         this.timer = this.maxLength * 2;
+        this.lineWidth = Math.random() * 33 + 1;
+        this.hueValue += 10;
+        this.lightValue = Math.floor(Math.random() * 17 + 33);
     }
 }
 
@@ -69,14 +88,14 @@ class Effect {
         this.width = this.canvas.width;
         this.height = this.canvas.height;
         this.particles = [];
-        this.numberOfParticles = 1440;
-        this.cellSize = 33;
+        this.numberOfParticles = 100;
+        this.cellSize = 22;
         this.rows;
         this.cols;
         this.flowField = [];
-        this.curve = .33;
-        this.zoom = .33;
-        this.debug = true;
+        this.curve = 2;
+        this.zoom = .077;
+        this.debug = false;
         this.init();
 
         window.addEventListener('keydown', e => {
